@@ -11,6 +11,7 @@ import {
 } from '../utils/questions.js';
 import { useProgress } from '../context/ProgressContext.jsx';
 import BottomNav from '../components/BottomNav.jsx';
+import CelebrationOverlay from '../components/CelebrationOverlay.jsx';
 
 export default function PracticeSessionPage() {
   const location = useLocation();
@@ -25,6 +26,7 @@ export default function PracticeSessionPage() {
   const [feedback, setFeedback] = useState('');
   const [startTime, setStartTime] = useState(() => Date.now());
   const [shakeClass, setShakeClass] = useState('');
+  const [showCelebration, setShowCelebration] = useState(false);
 
   // If someone lands here without picking a table, send them back
   useEffect(() => {
@@ -75,7 +77,9 @@ export default function PracticeSessionPage() {
   };
 
   const goNext = () => {
-    if (currentIndex + 1 >= questions.length) {
+    const isLast = currentIndex + 1 >= questions.length;
+
+    if (isLast) {
       const durationSeconds = Math.round((Date.now() - startTime) / 1000);
       const session = {
         date: new Date().toISOString(),
@@ -84,55 +88,79 @@ export default function PracticeSessionPage() {
         total: questions.length,
         durationSeconds,
       };
+
       addSession(session);
-      navigate('/summary', { state: { session } });
-    } else {
-      setCurrentIndex((i) => i + 1);
-      setFeedback('');
+
+      // 🎉 Trigger celebration animation
+      setShowCelebration(true);
+
+      // After animation ends, go to summary
+      setTimeout(() => {
+        navigate('/summary', { state: { session } });
+      }, 2000);
+
+      return;
     }
+
+    // Otherwise continue
+    setCurrentIndex((i) => i + 1);
+    setFeedback('');
   };
 
   return (
-    <div className="page">
-      <WizardHeader
-        title={titleText}
-        subtitle={`Question ${currentIndex + 1} of ${questions.length}`}
-      />
-      <main className="page-content">
-        <QuestionCard
-          question={q}
-          answers={answerOptions}
-          onSelectAnswer={handleAnswer}
-          extraClassName={shakeClass}
-        />
-        <p
-          style={{
-            marginTop: 12,
-            fontSize: 16,
-            textAlign: 'center',
-            color: '#4b5563',
-            minHeight: 24,
-          }}
-        >
-          {feedback}
-        </p>
-        <p
-          style={{
-            marginTop: 4,
-            fontSize: 14,
-            textAlign: 'center',
-            color: '#6b7280',
-          }}
-        >
-          Correct so far: {correctCount}/{questions.length}
-        </p>
-        <PrimaryButton
-          label="Back to home"
-          onClick={() => navigate('/')}
-          style={{ marginTop: 24 }}
-        />
-      </main>
-      <BottomNav />
+    <div className="page" style={{ position: 'relative' }}>
+      {showCelebration && (
+        <CelebrationOverlay onFinish={() => setShowCelebration(false)} />
+      )}
+
+      {!showCelebration && (
+        <>
+          <WizardHeader
+            title={titleText}
+            subtitle={`Question ${currentIndex + 1} of ${questions.length}`}
+          />
+
+          <main className="page-content">
+            <QuestionCard
+              question={q}
+              answers={answerOptions}
+              onSelectAnswer={handleAnswer}
+              extraClassName={shakeClass}
+            />
+
+            <p
+              style={{
+                marginTop: 12,
+                fontSize: 16,
+                textAlign: 'center',
+                color: '#4b5563',
+                minHeight: 24,
+              }}
+            >
+              {feedback}
+            </p>
+
+            <p
+              style={{
+                marginTop: 4,
+                fontSize: 14,
+                textAlign: 'center',
+                color: '#6b7280',
+              }}
+            >
+              Correct so far: {correctCount}/{questions.length}
+            </p>
+
+            <PrimaryButton
+              label="Back to home"
+              onClick={() => navigate('/')}
+              style={{ marginTop: 24 }}
+            />
+          </main>
+
+          <BottomNav />
+        </>
+      )}
     </div>
   );
 }
