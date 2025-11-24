@@ -6,13 +6,14 @@ import Card from '../components/Card.jsx';
 import PrimaryButton from '../components/PrimaryButton.jsx';
 import BottomNav from '../components/BottomNav.jsx';
 
+
 export default function HomePage() {
   const navigate = useNavigate();
 
   return (
     <div className="page">
       <WizardHeader
-        title="Times Wizard"
+
         subtitle="Let’s make times tables feel like magic."
       />
 
